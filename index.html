@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>WOP Watson</title>
+  <meta name="description" content="Official site — music, films, merch.">
+  <meta name="theme-color" content="#0b0a09">
+  <link rel="preload" href="fonts/anton-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="vendor/lenis.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <noscript><style>.intro{display:none}body.is-loading{overflow:auto}</style></noscript>
+</head>
+<body class="is-loading">
+  <a class="skip" href="#main">Skip to content</a>
+
+  <!-- Overlays ------------------------------------------------------>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="cursor" aria-hidden="true"><span class="cursor__label"></span></div>
+
+  <!-- Intro: the first motion. Timeline lives in js/main.js → intro() -->
+  <div class="intro" id="intro" aria-hidden="true">
+    <div class="intro__name" data-artist></div>
+    <div class="intro__foot">
+      <span>Loading</span>
+      <span class="intro__count">000</span>
+    </div>
+    <div class="intro__bar"><i></i></div>
+  </div>
+
+  <!-- Nav ------------------------------------------------------------>
+  <header class="nav" id="nav">
+    <a class="nav__logo" href="#top" data-artist-short aria-label="Home"></a>
+    <div class="nav__right">
+      <a class="nav__link" href="#shop">Bag (<span id="bagCount">0</span>)</a>
+      <button class="nav__menu" id="menuBtn" aria-expanded="false" aria-controls="menu">
+        <span class="nav__menu-open">Menu</span><span class="nav__menu-close">Close</span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="menu" id="menu" aria-label="Main" aria-hidden="true">
+    <ul class="menu__list">
+      <li><a href="#top"><span>01</span>Home</a></li>
+      <li><a href="#films"><span>02</span>Films</a></li>
+      <li><a href="#gallery"><span>03</span>Gallery</a></li>
+      <li><a href="#music"><span>04</span>Music</a></li>
+      <li><a href="#shop"><span>05</span>Merch</a></li>
+    </ul>
+    <ul class="menu__social" id="menuSocial"></ul>
+  </nav>
+
+  <main id="main">
+    <!-- HERO ======================================================== -->
+    <section class="hero" id="top">
+      <div class="hero__media">
+        <!-- video-01 = looping hero. image-01 = poster while it loads. -->
+        <div class="media media--fill" data-type="image" data-id="1" data-tone="1" data-spec="Poster · 1920×1080 · JPG"></div>
+        <div class="media media--fill" data-type="video" data-id="1" data-tone="1" data-autoplay data-spec="Hero loop · 1920×1080 · MP4 · muted ≤6MB"></div>
+        <div class="hero__shade"></div>
+      </div>
+      <div class="hero__inner">
+        <h1 class="hero__title" data-artist-lines aria-label="WOP Watson"></h1>
+        <div class="hero__foot">
+          <a class="hero__latest" href="#music" data-cursor="Listen">
+            <small>Latest</small>
+            <span>Track Title One ↗</span>
+          </a>
+          <div class="hero__scroll"><span>Scroll</span><i></i></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MARQUEE ===================================================== -->
+    <section class="marquee" aria-label="Ticker">
+      <div class="marquee__row" data-dir="-1"><div class="marquee__set"></div></div>
+      <div class="marquee__row marquee__row--alt" data-dir="1"><div class="marquee__set"></div></div>
+    </section>
+
+    <!-- ABOUT ======================================================= -->
+    <section class="about" id="about">
+      <p class="label" data-reveal>( About )</p>
+      <p class="about__text" data-scrub>
+        Placeholder bio — swap this out. Say who you are, where you're from and why anybody should press play. Keep it short. Keep it loud. Two, maybe three sentences before the scroll runs out.
+      </p>
+      <div class="about__imgs">
+        <div class="about__a" data-parallax="0.6">
+          <div class="media" data-type="image" data-id="2" data-ratio="4/5" data-tone="2" data-reveal-media data-spec="Portrait 4:5 · 1600×2000 · JPG"></div>
+        </div>
+        <div class="about__b" data-parallax="1.4">
+          <div class="media" data-type="image" data-id="3" data-ratio="1/1" data-tone="3" data-reveal-media data-spec="Square 1:1 · 1200×1200 · JPG"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FILMS (pinned horizontal reel on desktop) =================== -->
+    <section class="reel" id="films">
+      <div class="reel__head">
+        <h2 class="h2" data-reveal>Films</h2>
+        <div class="reel__count"><span id="reelIdx">01</span> / 04</div>
+      </div>
+      <div class="reel__track" id="reelTrack">
+        <article class="film" data-cursor="Sound">
+          <div class="media" data-type="video" data-id="2" data-ratio="16/9" data-tone="1" data-spec="1920×1080 · MP4 · ≤10MB"></div>
+          <div class="film__meta"><span>01</span><h3>Video Title One</h3><span>Official Video</span></div>
+        </article>
+        <article class="film film--tall" data-cursor="Sound">
+          <div class="media" data-type="video" data-id="3" data-ratio="9/16" data-tone="2" data-spec="1080×1920 vertical · MP4 · ≤10MB"></div>
+          <div class="film__meta"><span>02</span><h3>Video Title Two</h3><span>Visualizer</span></div>
+        </article>
+        <article class="film" data-cursor="Sound">
+          <div class="media" data-type="video" data-id="4" data-ratio="16/9" data-tone="3" data-spec="1920×1080 · MP4 · ≤10MB"></div>
+          <div class="film__meta"><span>03</span><h3>Video Title Three</h3><span>Live</span></div>
+        </article>
+        <article class="film" data-cursor="Sound">
+          <div class="media" data-type="video" data-id="5" data-ratio="16/9" data-tone="4" data-spec="1920×1080 · MP4 · ≤10MB"></div>
+          <div class="film__meta"><span>04</span><h3>Video Title Four</h3><span>Behind the Scenes</span></div>
+        </article>
+      </div>
+      <div class="reel__bar" aria-hidden="true"><i></i></div>
+    </section>
+
+    <!-- GALLERY ===================================================== -->
+    <section class="gallery" id="gallery">
+      <div class="gallery__head">
+        <h2 class="h2" data-reveal>Frames</h2>
+        <p class="label" data-reveal>( 06 stills )</p>
+      </div>
+      <div class="gallery__grid">
+        <figure class="g g1" data-parallax="0.5"><div class="media" data-type="image" data-id="4" data-ratio="4/5"  data-tone="1" data-reveal-media data-spec="4:5 · 1600×2000"></div></figure>
+        <figure class="g g2" data-parallax="1.2"><div class="media" data-type="image" data-id="5" data-ratio="4/5"  data-tone="2" data-reveal-media data-spec="4:5 · 1600×2000"></div></figure>
+        <figure class="g g3" data-parallax="0.8"><div class="media" data-type="image" data-id="6" data-ratio="3/2"  data-tone="3" data-reveal-media data-spec="3:2 · 2400×1600"></div></figure>
+        <figure class="g g4" data-parallax="1.4"><div class="media" data-type="image" data-id="7" data-ratio="3/4"  data-tone="4" data-reveal-media data-spec="3:4 · 1500×2000"></div></figure>
+        <figure class="g g5" data-parallax="0.6"><div class="media" data-type="image" data-id="8" data-ratio="1/1"  data-tone="2" data-reveal-media data-spec="1:1 · 1600×1600"></div></figure>
+        <figure class="g g6" data-parallax="1"><div class="media" data-type="image" data-id="9" data-ratio="16/10" data-tone="1" data-reveal-media data-spec="16:10 · 2400×1500"></div></figure>
+      </div>
+    </section>
+
+    <!-- MUSIC ======================================================= -->
+    <section class="music" id="music">
+      <div class="music__head">
+        <h2 class="h2" data-reveal>Music</h2>
+        <p class="label" data-reveal>( Stream / Buy )</p>
+      </div>
+      <ul class="tracks" id="tracks"></ul>
+      <div class="tracks__preview" id="trackPreview" aria-hidden="true"></div>
+    </section>
+
+    <!-- SHOP ======================================================== -->
+    <section class="shop" id="shop">
+      <div class="shop__head">
+        <h2 class="h2" data-reveal>Merch</h2>
+        <p class="label" data-reveal>( Shopify / Printify — placeholder )</p>
+      </div>
+      <div class="shop__grid" id="shopGrid"></div>
+    </section>
+  </main>
+
+  <!-- FOOTER ======================================================== -->
+  <footer class="footer" id="footer">
+    <div class="footer__bg">
+      <div class="media media--fill" data-type="image" data-id="10" data-tone="3" data-spec="Backdrop · 2400×1600 · JPG"></div>
+      <div class="footer__shade"></div>
+    </div>
+    <div class="footer__inner">
+      <h2 class="footer__cta" data-reveal><span class="line">Stay</span><span class="line">locked in</span></h2>
+      <form class="signup" id="signup" novalidate>
+        <label for="email" class="label">( Email list )</label>
+        <div class="signup__row">
+          <input id="email" name="email" type="email" placeholder="you@email.com" autocomplete="email" required>
+          <button type="submit" data-cursor="Send">Join ↗</button>
+        </div>
+        <p class="signup__msg" id="signupMsg" role="status" aria-live="polite"></p>
+      </form>
+      <div class="footer__bottom">
+        <ul class="footer__social" id="footerSocial"></ul>
+        <p class="footer__legal">© <span id="year"></span> <span data-artist></span>. All rights reserved.</p>
+      </div>
+      <div class="footer__mark" data-artist aria-hidden="true"></div>
+    </div>
+  </footer>
+
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/ScrollTrigger.min.js"></script>
+  <script src="vendor/lenis.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/media.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
