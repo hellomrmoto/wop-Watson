@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="gsap.min.js"></script>
+    <!--
+      hero-loop — 5s seamless ambient loop for the WOP Watson hero.
+
+      Concept: a smoke-filled studio at 2 a.m. One brass stage light cuts through
+      haze, dust hangs in the beam, a chain catches a single glint.
+
+      Palette (declared up front):
+        bg      #0b0a09  warm black
+        tobacco #3d342b  haze
+        oxblood #6e2a24  haze
+        brass   #b59a62  the one accent: beams, glints
+        bone    #e4ddcf  glint cores, dust
+
+      Loop law: every ambient motion is a pure function of theta = 2*pi*t/5 using
+      sin/cos at integer harmonics, so t=0 and t=5 are the identical pose. Dust uses
+      a wrapped phase with a sin^2 envelope (zero at the wrap). Glints are one-shot
+      events that are fully off at both ends. No text: the page overlays the name.
+
+      Dark gradients band under H.264, so: radial falloffs only, no full-screen
+      linear gradients, plus a dither-level grain.
+    -->
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #0b0a09;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0b0a09;
+      }
+      #stage {
+        position: absolute;
+        inset: 0;
+      }
+      .world {
+        position: absolute;
+        inset: 0;
+        transform-origin: 1180px 380px;
+        will-change: transform;
+      }
+
+      /* ---- haze: soft radial smoke masses ---- */
+      .haze {
+        position: absolute;
+        border-radius: 50%;
+        will-change: transform;
+      }
+      #haze-a {
+        left: -380px;
+        top: 360px;
+        width: 1700px;
+        height: 940px;
+        background: radial-gradient(
+          closest-side,
+          rgba(61, 52, 43, 0.62) 0%,
+          rgba(61, 52, 43, 0.46) 28%,
+          rgba(61, 52, 43, 0.2) 58%,
+          rgba(61, 52, 43, 0.05) 82%,
+          rgba(61, 52, 43, 0) 100%
+        );
+      }
+      #haze-b {
+        left: 880px;
+        top: 30px;
+        width: 1500px;
+        height: 860px;
+        background: radial-gradient(
+          closest-side,
+          rgba(110, 42, 36, 0.5) 0%,
+          rgba(110, 42, 36, 0.36) 30%,
+          rgba(110, 42, 36, 0.16) 60%,
+          rgba(110, 42, 36, 0.04) 84%,
+          rgba(110, 42, 36, 0) 100%
+        );
+      }
+      #haze-c {
+        left: 520px;
+        top: -240px;
+        width: 1300px;
+        height: 760px;
+        background: radial-gradient(
+          closest-side,
+          rgba(150, 126, 96, 0.34) 0%,
+          rgba(150, 126, 96, 0.22) 32%,
+          rgba(150, 126, 96, 0.09) 62%,
+          rgba(150, 126, 96, 0) 100%
+        );
+      }
+      #haze-d {
+        left: -260px;
+        top: 560px;
+        width: 2500px;
+        height: 330px;
+        background: radial-gradient(
+          closest-side,
+          rgba(228, 221, 207, 0.15) 0%,
+          rgba(228, 221, 207, 0.08) 45%,
+          rgba(228, 221, 207, 0) 100%
+        );
+      }
+
+      /* ---- stage light ---- */
+      .hotspot {
+        position: absolute;
+        left: 1040px;
+        top: -520px;
+        width: 1040px;
+        height: 760px;
+        border-radius: 50%;
+        background: radial-gradient(
+          closest-side,
+          rgba(214, 186, 130, 0.5) 0%,
+          rgba(181, 154, 98, 0.3) 34%,
+          rgba(181, 154, 98, 0.1) 66%,
+          rgba(181, 154, 98, 0) 100%
+        );
+        will-change: transform;
+      }
+      .beam {
+        position: absolute;
+        top: -300px;
+        height: 2000px;
+        transform-origin: 50% 0;
+        will-change: transform;
+        background: linear-gradient(
+          90deg,
+          rgba(181, 154, 98, 0) 0%,
+          rgba(181, 154, 98, 0.12) 24%,
+          rgba(226, 204, 152, 0.26) 50%,
+          rgba(181, 154, 98, 0.12) 76%,
+          rgba(181, 154, 98, 0) 100%
+        );
+        -webkit-mask-image: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 1) 0%,
+          rgba(0, 0, 0, 0.72) 42%,
+          rgba(0, 0, 0, 0) 78%
+        );
+        mask-image: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 1) 0%,
+          rgba(0, 0, 0, 0.72) 42%,
+          rgba(0, 0, 0, 0) 78%
+        );
+      }
+      #beam-a {
+        left: 1330px;
+        width: 480px;
+      }
+      #beam-b {
+        left: 1660px;
+        width: 210px;
+      }
+
+      /* ---- dust (built by script, seeded) ---- */
+      .mote {
+        position: absolute;
+        left: 0;
+        top: 0;
+        border-radius: 50%;
+        opacity: 0;
+        background: radial-gradient(
+          circle,
+          rgba(236, 228, 208, 1) 0%,
+          rgba(228, 214, 180, 0.7) 40%,
+          rgba(228, 214, 180, 0) 100%
+        );
+        will-change: transform, opacity;
+      }
+
+      /* ---- glints: jewelry catching the light ---- */
+      .glint {
+        position: absolute;
+        width: 0;
+        height: 0;
+      }
+      .glint i {
+        position: absolute;
+        display: block;
+        will-change: transform, opacity;
+        opacity: 0;
+      }
+      .g-halo {
+        left: -110px;
+        top: -110px;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(
+          closest-side,
+          rgba(214, 186, 130, 0.55) 0%,
+          rgba(181, 154, 98, 0.22) 45%,
+          rgba(181, 154, 98, 0) 100%
+        );
+      }
+      .g-core {
+        left: -13px;
+        top: -13px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: radial-gradient(
+          closest-side,
+          rgba(255, 250, 238, 1) 0%,
+          rgba(236, 226, 200, 0.85) 45%,
+          rgba(236, 226, 200, 0) 100%
+        );
+      }
+      .g-h {
+        left: -300px;
+        top: -1.5px;
+        width: 600px;
+        height: 3px;
+        background: linear-gradient(
+          90deg,
+          rgba(236, 226, 200, 0) 0%,
+          rgba(244, 236, 214, 0.95) 50%,
+          rgba(236, 226, 200, 0) 100%
+        );
+      }
+      .g-hb {
+        left: -340px;
+        top: -9px;
+        width: 680px;
+        height: 18px;
+        background: radial-gradient(
+          closest-side,
+          rgba(214, 186, 130, 0.3) 0%,
+          rgba(181, 154, 98, 0) 100%
+        );
+      }
+      .g-v {
+        left: -1px;
+        top: -130px;
+        width: 2px;
+        height: 260px;
+        background: linear-gradient(
+          180deg,
+          rgba(236, 226, 200, 0) 0%,
+          rgba(244, 236, 214, 0.9) 50%,
+          rgba(236, 226, 200, 0) 100%
+        );
+      }
+      .g-d {
+        left: -140px;
+        top: -1px;
+        width: 280px;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          rgba(236, 226, 200, 0) 0%,
+          rgba(244, 236, 214, 0.7) 50%,
+          rgba(236, 226, 200, 0) 100%
+        );
+      }
+
+      /* ---- screen-space finishing (not part of the camera) ---- */
+      .quiet {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 1000px 560px at 380px 900px,
+          rgba(11, 10, 9, 0.62) 0%,
+          rgba(11, 10, 9, 0.3) 55%,
+          rgba(11, 10, 9, 0) 100%
+        );
+      }
+      .vignette {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 90% 85% at 62% 38%,
+          rgba(11, 10, 9, 0) 42%,
+          rgba(11, 10, 9, 0.5) 78%,
+          rgba(11, 10, 9, 0.82) 100%
+        );
+      }
+      .grain {
+        position: absolute;
+        left: -480px;
+        top: -270px;
+        width: 2880px;
+        height: 1620px;
+        opacity: 0.2;
+        mix-blend-mode: overlay;
+        background-size: 512px 512px;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        will-change: transform;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="hero-loop"
+      data-start="0"
+      data-duration="5"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div id="stage">
+        <div class="world" id="world">
+          <div class="haze" id="haze-a" data-layout-allow-overflow></div>
+          <div class="haze" id="haze-b" data-layout-allow-overflow></div>
+          <div class="haze" id="haze-c" data-layout-allow-overflow></div>
+          <div class="hotspot" id="hotspot" data-layout-allow-overflow></div>
+          <div class="beam" id="beam-a" data-layout-allow-overflow></div>
+          <div class="beam" id="beam-b" data-layout-allow-overflow></div>
+          <div class="haze" id="haze-d" data-layout-allow-overflow></div>
+          <div id="dust"></div>
+
+          <div class="glint" id="glint-a" style="left: 1262px; top: 402px">
+            <i class="g-halo"></i><i class="g-hb"></i><i class="g-h"></i><i class="g-v"></i
+            ><i class="g-d"></i><i class="g-d"></i><i class="g-core"></i>
+          </div>
+          <div class="glint" id="glint-b" style="left: 1604px; top: 668px">
+            <i class="g-halo"></i><i class="g-hb"></i><i class="g-h"></i><i class="g-v"></i
+            ><i class="g-d"></i><i class="g-d"></i><i class="g-core"></i>
+          </div>
+        </div>
+
+        <div class="quiet"></div>
+        <div class="vignette"></div>
+        <div class="grain" id="grain" data-layout-allow-overflow></div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+
+        var W = 1920;
+        var H = 1080;
+        var D = 5; // loop length (s)
+        var TAU = Math.PI * 2;
+
+        function mulberry32(a) {
+          return function () {
+            a |= 0;
+            a = (a + 0x6d2b79f5) | 0;
+            var t = Math.imul(a ^ (a >>> 15), 1 | a);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+          };
+        }
+        function clamp(v, lo, hi) {
+          return Math.max(lo, Math.min(hi, v));
+        }
+        function smooth(k) {
+          k = clamp(k, 0, 1);
+          return k * k * (3 - 2 * k);
+        }
+        function $(id) {
+          return document.getElementById(id);
+        }
+
+        /* ---------- beams: sway around a top pivot ---------- */
+        var BEAMS = [
+          { el: $("beam-a"), pivotX: 1330 + 240, pivotY: -300, w: 480, rot: 24, rotAmp: 2.2, ph: 0.4, xAmp: 46, op: 1, opAmp: 0.12, opPh: 1.3, weight: 1 },
+          { el: $("beam-b"), pivotX: 1660 + 105, pivotY: -300, w: 210, rot: 31, rotAmp: 2.8, ph: 2.3, xAmp: 34, op: 0.8, opAmp: 0.16, opPh: 3.4, weight: 0.8 },
+        ];
+        var BEAM_LEN = 2000;
+
+        function beamPose(b, th) {
+          return {
+            rot: b.rot + b.rotAmp * Math.sin(th + b.ph) + 0.5 * Math.sin(2 * th + b.ph * 2),
+            dx: b.xAmp * Math.cos(th + b.ph),
+          };
+        }
+
+        /* ---------- haze: slow drifting masses (integer harmonics) ---------- */
+        var HAZE = [
+          { el: $("haze-a"), ax: 110, ay: 46, ph: 0, h2: 1, sc: 0.05, rot: 3 },
+          { el: $("haze-b"), ax: 130, ay: 60, ph: 2.1, h2: 1, sc: 0.07, rot: -4 },
+          { el: $("haze-c"), ax: 90, ay: 40, ph: 4.2, h2: 2, sc: 0.06, rot: 5 },
+          { el: $("haze-d"), ax: 210, ay: 18, ph: 1.0, h2: 1, sc: 0.03, rot: 0 },
+        ];
+        var hotspot = $("hotspot");
+        var world = $("world");
+
+        /* ---------- dust: seeded motes, wrapped phase, sin^2 envelope ---------- */
+        var rng = mulberry32(20260930);
+        var dustHost = $("dust");
+        var MOTES = [];
+        for (var i = 0; i < 78; i++) {
+          var inBeam = rng() < 0.72;
+          var size = 2.5 + Math.pow(rng(), 1.5) * 8;
+          var el = document.createElement("div");
+          el.className = "mote";
+          el.style.width = size + "px";
+          el.style.height = size + "px";
+          if (size > 6) el.style.filter = "blur(" + (0.8 + (size - 6) * 0.45).toFixed(2) + "px)";
+          dustHost.appendChild(el);
+          MOTES.push({
+            el: el,
+            x0: inBeam ? 760 + rng() * 1100 : rng() * W,
+            y0: 120 + rng() * 980,
+            travel: 130 + rng() * 300 * (size / 6),
+            sway: 8 + rng() * 34,
+            cyc: rng() < 0.55 ? 1 : 2,
+            ph: rng() * TAU,
+            phi: rng(),
+            peak: Math.min(0.95, 0.55 + 0.7 * (size / 10)),
+          });
+        }
+
+        function render(t) {
+          var th = (TAU * t) / D;
+
+          // camera: one slow push-in and back, centred on the light
+          var push = 0.025 * (1 - Math.cos(th));
+          world.style.transform =
+            "translate3d(" + (-16 * Math.sin(th)).toFixed(2) + "px,0,0) scale(" + (1 + push).toFixed(5) + ")";
+
+          for (var h = 0; h < HAZE.length; h++) {
+            var z = HAZE[h];
+            var x = z.ax * Math.sin(th + z.ph);
+            var y = z.ay * Math.cos(th * z.h2 + z.ph);
+            var s = 1 + z.sc * Math.sin(2 * th + z.ph);
+            z.el.style.transform =
+              "translate3d(" + x.toFixed(2) + "px," + y.toFixed(2) + "px,0) rotate(" + (z.rot * Math.sin(th + z.ph)).toFixed(3) + "deg) scale(" + s.toFixed(4) + ")";
+          }
+
+          var poses = [];
+          for (var b = 0; b < BEAMS.length; b++) {
+            var B = BEAMS[b];
+            var p = beamPose(B, th);
+            poses.push(p);
+            B.el.style.transform = "translate3d(" + p.dx.toFixed(2) + "px,0,0) rotate(" + p.rot.toFixed(3) + "deg)";
+            B.el.style.opacity = (B.op * (1 + B.opAmp * Math.sin(th + B.opPh))).toFixed(4);
+          }
+          hotspot.style.opacity = (0.9 + 0.1 * Math.sin(th + 1.3)).toFixed(4);
+
+          // dust: brighter where it crosses a beam
+          for (var m = 0; m < MOTES.length; m++) {
+            var M = MOTES[m];
+            var u = (((t / D + M.phi) % 1) + 1) % 1;
+            var mx = M.x0 + M.sway * Math.sin(TAU * M.cyc * (t / D) + M.ph);
+            var my = M.y0 - M.travel * u;
+            var env = Math.sin(Math.PI * u);
+            env *= env;
+
+            var lit = 0;
+            for (var q = 0; q < BEAMS.length; q++) {
+              var Bq = BEAMS[q];
+              var r = (poses[q].rot * Math.PI) / 180;
+              var dxn = -Math.sin(r);
+              var dyn = Math.cos(r);
+              var vx = mx - (Bq.pivotX + poses[q].dx);
+              var vy = my - Bq.pivotY;
+              var along = vx * dxn + vy * dyn;
+              var perp = Math.abs(vx * dyn - vy * dxn);
+              var k = smooth(1 - perp / (Bq.w * 0.62)) * clamp(1 - along / (BEAM_LEN * 0.8), 0, 1) * Bq.weight;
+              if (along < 0) k = 0;
+              if (k > lit) lit = k;
+            }
+            M.el.style.transform = "translate3d(" + mx.toFixed(2) + "px," + my.toFixed(2) + "px,0)";
+            M.el.style.opacity = (M.peak * env * (0.2 + 0.8 * lit)).toFixed(4);
+          }
+        }
+
+        var drive = { t: 0 };
+        var tl = gsap.timeline({ paused: true });
+
+        // single driver: the whole ambient field is a pure function of t
+        tl.fromTo(
+          drive,
+          { t: 0 },
+          {
+            t: D,
+            duration: D,
+            ease: "none",
+            onUpdate: function () {
+              render(drive.t);
+            },
+          },
+          0,
+        );
+
+        /* ---------- glints: one-shot events, fully off at both loop ends ---------- */
+        function glint(rootId, at, k, spin) {
+          var g = $(rootId);
+          var q = function (c) {
+            return g.querySelectorAll(c);
+          };
+          var core = q(".g-core");
+          var halo = q(".g-halo");
+          var h = q(".g-h");
+          var hb = q(".g-hb");
+          var v = q(".g-v");
+          var d = q(".g-d");
+
+          gsap.set(d[0], { rotation: 38 });
+          gsap.set(d[1], { rotation: -38 });
+
+          // rise (fast, expo) …
+          tl.fromTo(core, { scale: 0, opacity: 0 }, { scale: k, opacity: 1, duration: 0.14, ease: "power3.out" }, at);
+          tl.fromTo(halo, { scale: 0.3, opacity: 0 }, { scale: k * 1.1, opacity: 1, duration: 0.2, ease: "power2.out" }, at);
+          tl.fromTo(h, { scaleX: 0, opacity: 0 }, { scaleX: k, opacity: 1, duration: 0.22, ease: "expo.out" }, at);
+          tl.fromTo(hb, { scaleX: 0, opacity: 0 }, { scaleX: k, opacity: 1, duration: 0.26, ease: "expo.out" }, at);
+          tl.fromTo(v, { scaleY: 0, opacity: 0 }, { scaleY: 0.7 * k, opacity: 0.9, duration: 0.18, ease: "power3.out" }, at + 0.02);
+          tl.fromTo(d, { scaleX: 0, opacity: 0 }, { scaleX: 0.85 * k, opacity: 0.8, duration: 0.2, ease: "power3.out" }, at + 0.03);
+          // … slow rotation of the cross while it lives …
+          tl.fromTo(d[0], { rotation: 38 }, { rotation: 38 + spin, duration: 0.8, ease: "none" }, at);
+          tl.fromTo(d[1], { rotation: -38 }, { rotation: -38 + spin, duration: 0.8, ease: "none" }, at);
+          // … and a longer fade (power2.in)
+          var out = at + 0.2;
+          tl.fromTo(core, { scale: k, opacity: 1 }, { scale: 0.3 * k, opacity: 0, duration: 0.5, ease: "power2.in", immediateRender: false }, out);
+          tl.fromTo(halo, { scale: k * 1.1, opacity: 1 }, { scale: 0.7 * k, opacity: 0, duration: 0.55, ease: "power2.in", immediateRender: false }, out);
+          tl.fromTo(h, { scaleX: k, opacity: 1 }, { scaleX: 0.55 * k, opacity: 0, duration: 0.55, ease: "power2.in", immediateRender: false }, out);
+          tl.fromTo(hb, { scaleX: k, opacity: 1 }, { scaleX: 0.6 * k, opacity: 0, duration: 0.6, ease: "power2.in", immediateRender: false }, out);
+          tl.fromTo(v, { scaleY: 0.7 * k, opacity: 0.9 }, { scaleY: 0.3 * k, opacity: 0, duration: 0.45, ease: "power2.in", immediateRender: false }, out);
+          tl.fromTo(d, { scaleX: 0.85 * k, opacity: 0.8 }, { scaleX: 0.4 * k, opacity: 0, duration: 0.45, ease: "power2.in", immediateRender: false }, out);
+        }
+        glint("glint-a", 1.78, 1, 14);
+        glint("glint-b", 3.72, 0.62, -12);
+
+        /* ---------- grain: 12 fps jitter, seeded, driven by the timeline ---------- */
+        var gr = mulberry32(777);
+        var grain = $("grain");
+        for (var f = 0; f < D * 12; f++) {
+          tl.set(grain, { x: Math.round(-200 + gr() * 400), y: Math.round(-140 + gr() * 280) }, f / 12);
+        }
+
+        render(0);
+        tl.seek(0);
+        window.__timelines["hero-loop"] = tl;
+      })();
+    </script>
+  </body>
+</html>

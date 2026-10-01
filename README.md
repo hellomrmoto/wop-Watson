@@ -15,11 +15,11 @@ Every slot is a placeholder until a file with the right name exists. Missing fil
 
 | File | Where it shows | Spec |
 |---|---|---|
-| `assets/video/video-01.mp4` | Hero background loop | 1920×1080, muted, ≤ 6 MB |
+| `assets/video/video-01.mp4` | Hero background loop. **Currently a generated stand-in, see "Hero clip" below** | 1920×1080, muted, ≤ 6 MB |
 | `assets/video/video-02.mp4` | Films reel #1 | 16:9, ≤ 10 MB |
 | `assets/video/video-03.mp4` | Films reel #2 | **9:16 vertical**, ≤ 10 MB |
 | `assets/video/video-04.mp4`, `video-05.mp4` | Films reel #3, #4 | 16:9, ≤ 10 MB |
-| `assets/images/image-01.jpg` | Hero poster (shows while video loads) | 1920×1080 |
+| `assets/images/image-01.jpg` | Hero poster (shows while video loads). Currently frame 0 of the clip | 1920×1080 |
 | `image-02.jpg` / `image-03.jpg` | About — portrait / small inset | 4:5 (1600×2000) / 1:1 |
 | `image-04.jpg` … `image-09.jpg` | Gallery, and the hover previews in Music | 4:5, 4:5, 3:2, 3:4, 1:1, 16:10 (shown on each placeholder) |
 | `image-10.jpg` | Footer backdrop | 2400×1600 |
@@ -34,6 +34,21 @@ ffmpeg -i in.mov -vf "scale=1920:-2" -c:v libx264 -crf 25 -preset slow -pix_fmt 
 ffmpeg -i in.mov -vf "scale=1920:-2" -c:v libx264 -crf 23 -preset slow -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 128k assets/video/video-02.mp4
 ```
 JPGs: export at ~80% quality. Big uncompressed files are the #1 thing that makes a motion site feel janky.
+
+## Hero clip (generated stand-in)
+
+`assets/video/video-01.mp4` is a 5-second seamless loop built with [HyperFrames](https://github.com/heygen-com/hyperframes) (HTML → video). It is **not footage**: smoke, a brass stage-light beam, dust that catches the beam, two jewelry glints and light grain, in the site's palette, with no text (the page overlays the name). It exists so the hero has the intended mood now and can be judged in context. Swap in real footage whenever you have it: drop a file over `video-01.mp4`.
+
+Source lives in `videos/hero-loop/` (`index.html` is the whole composition; `BRIEF.md` has the intent). Every ambient motion is a function of `sin/cos(2π·t/5)`, so the last frame flows into the first. Measured on the shipped file: the frame 149 to frame 0 seam scores SSIM 0.980, inside the 0.976 to 0.993 range of ordinary one-frame steps.
+
+```bash
+cd videos/hero-loop
+npm run check    # lint + runtime + layout + motion + contrast
+npm run dev      # live preview in HyperFrames Studio
+npm run render   # re-renders straight to assets/video/video-01.mp4 (CRF 15, ~5.6 MB, byte-identical every run)
+```
+
+Render notes: CRF 15 is deliberate. Dark gradients band under H.264, and a lower CRF preserves the grain that dithers them. CRF 18 is 2.6 MB but shows contour banding when shadows are lifted. Needs Node 22+ and ffmpeg. The site's own hero shade dims the clip; lighten `.hero__shade` in `css/styles.css` if you want it brighter.
 
 ## Where to edit
 

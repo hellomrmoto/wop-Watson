@@ -1,0 +1,11 @@
+{
+  "name": "hero-loop",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.8.105 preview",
+    "check": "npx --yes hyperframes@0.8.105 check",
+    "render": "npx --yes hyperframes@0.8.105 render --fps 30 --crf 15 -o ../../assets/video/video-01.mp4",
+    "publish": "npx --yes hyperframes@0.8.105 publish"
+  }
+}
